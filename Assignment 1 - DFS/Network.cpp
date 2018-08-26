@@ -45,5 +45,5 @@ static class networkIO
     void load_connections();
     string get_start_node();
     string get_end_node();
-    void print_path(Maze maze);
+    void print_path(Network network);
 }
