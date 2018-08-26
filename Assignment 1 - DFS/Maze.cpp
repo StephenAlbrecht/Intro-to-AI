@@ -3,15 +3,16 @@
 
 using namespace std;
 
-/** we could make this a struct and have a separate utility function for dist.
- * struct makes everything public, but since most members are const and should
- * be assigned upon construction, I don't think it matters. Thoughts? */
+/**I've been using Node* pointers here to reference nodes without copying them
+ * but I'm not 100% certain the usage is correct. */
 class Node
 {
   public:
     Node();
     Node(string name, float x, float y);
     float dist(Node *neighbor);
+    // gets neighbor with smallest alphanumeric name, returns null if no options
+    Node * get_available_neighbor();
     // need setters, getters
   private:
     const string name;
@@ -21,12 +22,12 @@ class Node
     bool visited = false;
 }
 
-class Maze
+class Network
 {
   public:
-    Maze();
+    Network();
     void add_node(Node node); // just add node to map
-    void find_exit(); // dfs
+    void find_path(); // dfs
   private:
     map<string, Node> nodes;
     stack<Node*> path;
@@ -37,7 +38,7 @@ class Maze
     float total_distance;
 }
 
-static class mazeIO
+static class networkIO
 {
   public:
     void load_locations();
