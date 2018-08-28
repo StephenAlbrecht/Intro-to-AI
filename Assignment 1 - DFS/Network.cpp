@@ -1,49 +1,97 @@
 #include <stack>
 #include <map>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
-/**I've been using Node* pointers here to reference nodes without copying them
- * but I'm not 100% certain the usage is correct. */
 class Node
 {
   public:
     Node();
-    Node(string name, float x, float y);
+    Node(string name, float x, float y) {
+      this->name = name;
+      this->x = x;
+      this->y = y;
+    };
     float dist(Node *neighbor);
     // gets neighbor with smallest alphanumeric name, returns null if no options
     Node * get_available_neighbor();
-    // need setters, getters
+    string get_name() { return name; };
+    float get_x() { return x; };
+    float get_y() { return y; };
+    bool is_visited() { return visited; };
+    void set_visited() { visited = true; };
+    vector<Node *> get_neighbors() { return neighbors; };
+    void set_neighbors(vector<Node *> neighbors) { this->neighbors = neighbors; };
   private:
-    const string name;
-    const float x;
-    const float y;
-    const Node *neighbors[];
+    string name;
+    float y;
+    float x;
     bool visited = false;
-}
+    vector<Node *> neighbors;
+};
 
 class Network
 {
   public:
-    Network();
-    void add_node(Node node); // just add node to map
+    Network() {};
+    void add_node(Node *node) {
+      nodes[node->get_name()] = node;
+    };
     void find_path(); // dfs
+    void set_start_node(Node *node);
+    void set_end_node(Node *node);
+    Node * get_start_node();
+    Node * get_end_node();
+    map<string, Node *> get_nodes() { return nodes; };
   private:
-    map<string, Node> nodes;
+    map<string, Node *> nodes;
     stack<Node*> path;
-    Node *start_node;
-    Node *end_node;
+    const Node *start_node;
+    const Node *end_node;
     // distance should be computed at the very end during printing instead of 
     // every time we travel to a new node. Should be more efficient.
     float total_distance;
-}
+};
 
-static class networkIO
+struct NetworkIO
 {
-  public:
-    void load_locations();
-    void load_connections();
-    string get_start_node();
-    string get_end_node();
-    void print_path(Network network);
+  static void load_locations(Network network) {
+    ifstream file;
+    string line;
+    file.open("locations.txt");
+    if (!file.is_open()) {
+      cout << "Failure to open locations.txt" << endl;
+      return;
+    }
+    while(getline(file, line) && line != "END") {
+      istringstream iss(line);
+      string name;
+      int x, y;
+      iss >> name;
+      iss >> x;
+      iss >> y;
+      network.add_node(new Node(name, x, y));
+    }
+    file.close();
+  };
+  static void load_connections(Network network) {};
+  static Node * set_start_node();
+  static Node * set_end_node();
+  static void print_path(Network network);
+};
+
+int main() {
+  Network network;
+  NetworkIO::load_locations(network);
+  // NetworkIO::load_connections(network);
+  // network.set_start_node(NetworkIO::set_start_node());
+  // network.set_end_node(NetworkIO::set_end_node());
+  // network.find_path();
+  // NetworkIO::print_path(network);
+  cout << "Press Enter to Continue";
+  cin.ignore();
 }
