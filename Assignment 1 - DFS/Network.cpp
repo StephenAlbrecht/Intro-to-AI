@@ -131,6 +131,7 @@ int main() {
   NetworkIO::set_end_node(&network);
   // network.find_path();
   // NetworkIO::print_path(&network);
-  cout << "Press Enter to Continue";
-  cin.ignore();
+  cout << "Press any key to terminate program...";
+  cin.sync();
+  cin.get();
 }
