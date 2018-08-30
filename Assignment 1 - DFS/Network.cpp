@@ -5,6 +5,8 @@
 #include <fstream>
 #include <sstream>
 
+//did it work?
+
 using namespace std;
 
 class Node
