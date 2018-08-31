@@ -35,51 +35,56 @@ private:
 
 class Network
 {
-public:
-	Network() {};
-	void add_node(Node *node) {
-		nodes[node->get_name()] = node;
-	};
-	void find_path(); // dfs
-	void set_start_node(Node *node);
-	void set_end_node(Node *node);
-	Node * get_start_node();
-	Node * get_end_node();
-	map<string, Node *> get_nodes() { return nodes; };
-private:
-	map<string, Node *> nodes;
-	stack<Node*> path;
-	const Node *start_node;
-	const Node *end_node;
-	// distance should be computed at the very end during printing instead of 
-	// every time we travel to a new node. Should be more efficient.
-	float total_distance;
+  public:
+    Network() {};
+    void add_node(Node *node) {
+      nodes.insert(pair<string, Node *>(node->get_name(), node));
+    };
+    Node * get_node(string name) {
+      if(nodes.find(name) != nodes.end())
+        return nodes.at(name);
+      else
+        return nullptr;
+    };
+    void find_path(); // dfs
+    void set_start_node(Node *node) { start_node = node; };
+    void set_end_node(Node *node) { end_node = node; };
+    Node * get_start_node() { return start_node; };
+    Node * get_end_node() { return end_node; };
+    map<string, Node *> get_nodes() { return nodes; };
+  private:
+    map<string, Node *> nodes;
+    stack<Node *> path;
+    Node *start_node;
+    Node *end_node;
+    // distance should be computed at the very end during printing instead of 
+    // every time we travel to a new node. Should be more efficient.
+    float total_distance;
 };
 
 struct NetworkIO
 {
-	static void load_locations(Network* network) {
-		ifstream file;
-		string line;
-		file.open("locations.txt");
-		if (!file.is_open()) {
-			cout << "Failure to open locations.txt" << endl;
-			return;
-		}
-		while (getline(file, line) && line != "END") {
-			istringstream iss(line);
-			string name;
-			int x, y;
-			iss >> name;
-			iss >> x;
-			iss >> y;
-			network->add_node(new Node(name, x, y));
-		}
-		file.close();
-	};
-
-	static void load_connections(Network* network) {
-		ifstream file;
+  static void load_locations(Network *network) {
+    ifstream file;
+    string line;
+    file.open("locations.txt");
+    if (!file.is_open()) {
+      cout << "Failure to open locations.txt" << endl;
+      return;
+    }
+    while(getline(file, line) && line != "END") {
+      istringstream iss(line);
+      string name;
+      int x, y;
+      iss >> name;
+      iss >> x;
+      iss >> y;
+      network->add_node(new Node(name, x, y));
+    }
+    file.close();
+  };
+  static void load_connections(Network *network) {
+    ifstream file;
 		string line;
 		file.open("connections.txt");
 		if (!file.is_open()) {
@@ -110,21 +115,53 @@ struct NetworkIO
 		}
 		file.close();
 	};
-
-	static void load_connections(Network network) {};
-	static Node * set_start_node();
-	static Node * set_end_node();
-	static void print_path(Network network);
+  static void set_start_node(Network *network) {
+    int valid_input = 0;
+    string name;
+    while(!valid_input) {
+      cout << "Enter the name of the starting node: ";
+      cin >> name;
+      Node * start_node = network->get_node(name);
+      if(start_node != nullptr) {
+        network->set_start_node(start_node);
+        valid_input = 1;
+      } else {
+        cout << "Node " << name << " not found. Try again." << endl;
+      }
+    };
+  };
+  static void set_end_node(Network *network) {
+    int valid_input = 0;
+    string name;
+    while(!valid_input) {
+      cout << "Enter the name of the destination node: ";
+      cin >> name;
+      Node * end_node = network->get_node(name);
+      if(end_node != nullptr) {
+        Node * start_node = network->get_start_node();
+        if(end_node == start_node) {
+          cout << name << " is the starting node. Try again." << endl;
+        } else {
+          network->set_end_node(end_node);
+          valid_input = 1;
+        }
+      } else {
+        cout << "Node " << name << " not found. Try again." << endl;
+      }
+    };
+  };
+  static void print_path(Network *network);
 };
 
 int main() {
-	Network network;
-	NetworkIO::load_locations(&network);
-	NetworkIO::load_connections(&network);
-	// network.set_start_node(NetworkIO::set_start_node());
-	// network.set_end_node(NetworkIO::set_end_node());
-	// network.find_path();
-	// NetworkIO::print_path(network);
-	cout << "Press Enter to Continue";
-	cin.ignore();
+  Network network;
+  NetworkIO::load_locations(&network);
+  NetworkIO::load_connections(&network);
+  NetworkIO::set_start_node(&network);
+  NetworkIO::set_end_node(&network);
+  // network.find_path();
+  // NetworkIO::print_path(&network);
+  cout << "Press any key to terminate program...";
+  cin.sync();
+  cin.get();
 }
