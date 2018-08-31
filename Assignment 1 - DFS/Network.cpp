@@ -4,34 +4,33 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
 using namespace std;
 
 class Node
 {
-  public:
-    Node();
-    Node(string name, float x, float y) {
-      this->name = name;
-      this->x = x;
-      this->y = y;
-    };
-    float dist(Node *neighbor);
-    // gets neighbor with smallest alphanumeric name, returns null if no options
-    Node * get_available_neighbor();
-    string get_name() { return name; };
-    float get_x() { return x; };
-    float get_y() { return y; };
-    bool is_visited() { return visited; };
-    void set_visited() { visited = true; };
-    vector<Node *> get_neighbors() { return neighbors; };
-    void set_neighbors(vector<Node *> neighbors) { this->neighbors = neighbors; };
-  private:
-    string name;
-    float y;
-    float x;
-    bool visited = false;
-    vector<Node *> neighbors;
+public:
+	Node();
+	Node(string name, float x, float y) {
+		this->name = name;
+		this->x = x;
+		this->y = y;
+	};
+	float dist(Node *neighbor);
+	// gets neighbor with smallest alphanumeric name, returns null if no options
+	Node * get_available_neighbor();
+	string get_name() { return name; };
+	float get_x() { return x; };
+	float get_y() { return y; };
+	bool is_visited() { return visited; };
+	void set_visited() { visited = true; };
+	vector<Node *> get_neighbors() { return neighbors; };
+	void set_neighbors(vector<Node *> neighbors) { this->neighbors = neighbors; };
+private:
+	string name;
+	float y;
+	float x;
+	bool visited = false;
+	vector<Node *> neighbors;
 };
 
 class Network
@@ -84,7 +83,38 @@ struct NetworkIO
     }
     file.close();
   };
-  static void load_connections(Network *network) {};
+  static void load_connections(Network *network) {
+    ifstream file;
+		string line;
+		file.open("connections.txt");
+		if (!file.is_open()) {
+			cout << "Failure to open connections.txt" << endl;
+			return;
+		}
+		while (getline(file, line) && line != "END") {
+			istringstream iss(line);
+			string name;
+			int num_neighbors;
+			iss >> name;
+			iss >> num_neighbors;
+
+			Node* n = network->get_nodes().at(name);
+			vector<Node*> node_neighbors;
+
+			for (int i = 0; i < num_neighbors; i++) {
+				string str;
+				iss >> str;
+
+				//find node that matches name "str" and add to node_neighbors vector
+				Node* neighbor = network->get_nodes().at(str);
+				node_neighbors.push_back(neighbor);
+			}
+
+			//add the node_neighbors vector to the current node on input file
+			network->get_nodes().at(name)->set_neighbors(node_neighbors);
+		}
+		file.close();
+	};
   static void set_start_node(Network *network) {
     int valid_input = 0;
     string name;
@@ -126,7 +156,7 @@ struct NetworkIO
 int main() {
   Network network;
   NetworkIO::load_locations(&network);
-  // NetworkIO::load_connections(&network);
+  NetworkIO::load_connections(&network);
   NetworkIO::set_start_node(&network);
   NetworkIO::set_end_node(&network);
   // network.find_path();
