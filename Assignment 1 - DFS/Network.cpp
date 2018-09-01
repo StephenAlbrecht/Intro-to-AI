@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 using namespace std;
 
 // test
@@ -27,6 +28,7 @@ public:
 	void set_visited() { visited = true; };
 	vector<Node *> get_neighbors() { return neighbors; };
 	void set_neighbors(vector<Node *> neighbors) { this->neighbors = neighbors; };
+  bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
 private:
 	string name;
 	float y;
@@ -70,6 +72,7 @@ class Network
     Node * get_start_node() { return start_node; };
     Node * get_end_node() { return end_node; };
     map<string, Node *> get_nodes() { return nodes; };
+    bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
   private:
     map<string, Node *> nodes;
     stack<Node *> path;
@@ -127,12 +130,18 @@ struct NetworkIO
 				Node* neighbor = network->get_nodes().at(str);
 				node_neighbors.push_back(neighbor);
 			}
+      //the sort function below has an error I can't debug. Sort needs a 3rd parameter (either a function 
+			sort(node_neighbors.begin(), node_neighbors.begin() + num_neighbors, network->predicate);
 
 			//add the node_neighbors vector to the current node on input file
 			network->get_nodes().at(name)->set_neighbors(node_neighbors);
+
+			//test to see connections file was read in and stored correctly
+			for (auto& x : node_neighbors) { cout << x->get_name() << '\t'; } cout << endl;
 		}
 		file.close();
 	};
+  
   static void set_start_node(Network *network) {
     int valid_input = 0;
     string name;
