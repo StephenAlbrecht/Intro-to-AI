@@ -46,7 +46,23 @@ class Network
       else
         return nullptr;
     };
-    void find_path(); // dfs
+    void find_path() { // dfs
+      Node *current, *neighbor;
+      path.push(start_node);
+      while(!path.empty()) { // empty path = no solution
+        current = path.top();
+        current->set_visited();
+        if(current == end_node) { // found!
+          break;
+        }
+        neighbor = current->get_available_neighbor();
+        if (neighbor != nullptr) { // add next destination
+          path.push(neighbor);
+        } else { // no available neighbors, go back
+          path.pop();
+        }
+      }
+    };
     void set_start_node(Node *node) { start_node = node; };
     void set_end_node(Node *node) { end_node = node; };
     Node * get_start_node() { return start_node; };
