@@ -7,6 +7,8 @@
 #include <algorithm>
 using namespace std;
 
+// test
+
 class Node
 {
 public:
@@ -18,7 +20,12 @@ public:
 	};
 	float dist(Node *neighbor);
 	// gets neighbor with smallest alphanumeric name, returns null if no options
-	Node * get_available_neighbor();
+	Node * get_available_neighbor() {
+    for(Node *neighbor : neighbors)
+      if(!neighbor->is_visited())
+        return neighbor;
+    return nullptr;
+  };
 	string get_name() { return name; };
 	float get_x() { return x; };
 	float get_y() { return y; };
@@ -70,7 +77,6 @@ class Network
     Node * get_start_node() { return start_node; };
     Node * get_end_node() { return end_node; };
     map<string, Node *> get_nodes() { return nodes; };
-    bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
   private:
     map<string, Node *> nodes;
     stack<Node *> path;
@@ -102,6 +108,7 @@ struct NetworkIO
     }
     file.close();
   };
+  static bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
   static void load_connections(Network *network) {
     ifstream file;
 		string line;
@@ -117,7 +124,8 @@ struct NetworkIO
 			iss >> name;
 			iss >> num_neighbors;
 
-			Node* n = network->get_nodes().at(name);
+      map<string, Node *> nodes = network->get_nodes();
+			Node* n = nodes.at(name);
 			vector<Node*> node_neighbors;
 
 			for (int i = 0; i < num_neighbors; i++) {
@@ -125,17 +133,18 @@ struct NetworkIO
 				iss >> str;
 
 				//find node that matches name "str" and add to node_neighbors vector
-				Node* neighbor = network->get_nodes().at(str);
+				Node* neighbor = nodes.at(str);
 				node_neighbors.push_back(neighbor);
 			}
-      //the sort function below has an error I can't debug. Sort needs a 3rd parameter (either a function 
-			sort(node_neighbors.begin(), node_neighbors.begin() + num_neighbors, network->predicate);
+
+      // Sorts node_neighbors according to predicate function: by node name;
+			sort(node_neighbors.begin(), node_neighbors.end(), NetworkIO::predicate);
 
 			//add the node_neighbors vector to the current node on input file
-			network->get_nodes().at(name)->set_neighbors(node_neighbors);
+			nodes.at(name)->set_neighbors(node_neighbors);
 
 			//test to see connections file was read in and stored correctly
-			for (auto& x : node_neighbors) { cout << x->get_name() << '\t'; } cout << endl;
+			// for (auto& x : node_neighbors) { cout << x->get_name() << '\t'; } cout << endl;
 		}
 		file.close();
 	};
@@ -184,7 +193,7 @@ int main() {
   NetworkIO::load_connections(&network);
   NetworkIO::set_start_node(&network);
   NetworkIO::set_end_node(&network);
-  // network.find_path();
+  network.find_path();
   // NetworkIO::print_path(&network);
   cout << "Press any key to terminate program...";
   cin.sync();
