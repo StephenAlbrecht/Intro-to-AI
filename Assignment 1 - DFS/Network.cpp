@@ -6,7 +6,7 @@
 #include <sstream>
 using namespace std;
 
-// test 
+// test
 
 class Node
 {
