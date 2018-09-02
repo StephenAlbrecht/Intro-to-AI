@@ -5,9 +5,8 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 using namespace std;
-
-// test
 
 class Node
 {
@@ -18,7 +17,10 @@ public:
 		this->x = x;
 		this->y = y;
 	};
-	float dist(Node *neighbor);
+	double dist(Node *neighbor) {
+		//distance formula: square_root((x2-x1)^2 + (y2-y1)^2)
+		return sqrt(pow(neighbor->get_x() - this->get_x(), 2) + pow(neighbor->get_y() - this->get_y(), 2));
+	}
 	// gets neighbor with smallest alphanumeric name, returns null if no options
 	Node * get_available_neighbor() {
     for(Node *neighbor : neighbors)
@@ -33,7 +35,6 @@ public:
 	void set_visited() { visited = true; };
 	vector<Node *> get_neighbors() { return neighbors; };
 	void set_neighbors(vector<Node *> neighbors) { this->neighbors = neighbors; };
-  bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
 private:
 	string name;
 	float y;
@@ -77,6 +78,9 @@ class Network
     Node * get_start_node() { return start_node; };
     Node * get_end_node() { return end_node; };
     map<string, Node *> get_nodes() { return nodes; };
+	stack<Node*> get_path() { return path; };
+	float get_total_distance() { return total_distance; };
+	void set_total_distance(float distance) { total_distance = distance; };
   private:
     map<string, Node *> nodes;
     stack<Node *> path;
@@ -137,14 +141,14 @@ struct NetworkIO
 				node_neighbors.push_back(neighbor);
 			}
 
-      // Sorts node_neighbors according to predicate function: by node name;
+			// Sorts node_neighbors according to predicate function: by node name;
 			sort(node_neighbors.begin(), node_neighbors.end(), NetworkIO::predicate);
 
 			//add the node_neighbors vector to the current node on input file
 			nodes.at(name)->set_neighbors(node_neighbors);
 
 			//test to see connections file was read in and stored correctly
-			// for (auto& x : node_neighbors) { cout << x->get_name() << '\t'; } cout << endl;
+			//for (auto& x : node_neighbors) { cout << x->get_name() << '\t'; } cout << endl;
 		}
 		file.close();
 	};
@@ -184,7 +188,31 @@ struct NetworkIO
       }
     };
   };
-  static void print_path(Network *network);
+  static void print_path(Network *network) {
+	stack<Node*> path_copy = network->get_path();
+	stack<Node*> path_result;
+	Node* current;
+	if (!path_copy.empty())
+		current = path_copy.top();
+	while (!path_copy.empty()) {
+		path_result.push(current);
+		path_copy.pop();
+		if (!path_copy.empty())
+			current = path_copy.top();
+	}
+	current = path_result.top();
+	float distance = 0.0;
+	Node* neighbor;
+	while (path_result.size() > 1 ) {
+		path_result.pop();
+		neighbor = path_result.top();
+		cout << "From " << current->get_name() << " to " << neighbor->get_name() << ". Length: " << floor(current->dist(neighbor)) << endl;
+		distance += current->dist(neighbor);
+		current = path_result.top();
+	}
+	network->set_total_distance(distance);
+	cout << "Total Length: " << floor(network->get_total_distance()) << endl;
+  }
 };
 
 int main() {
@@ -194,8 +222,7 @@ int main() {
   NetworkIO::set_start_node(&network);
   NetworkIO::set_end_node(&network);
   network.find_path();
-  // NetworkIO::print_path(&network);
-  cout << "Press any key to terminate program...";
+  NetworkIO::print_path(&network);
   cin.sync();
   cin.get();
 }
