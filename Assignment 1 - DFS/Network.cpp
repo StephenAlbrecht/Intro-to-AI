@@ -16,18 +16,20 @@ class Node
       this->name = name;
       this->x = x;
       this->y = y;
+      visited = false;
     }
     double dist(Node *neighbor) {
       //distance formula: square_root((x2-x1)^2 + (y2-y1)^2)
       return sqrt(pow(neighbor->get_x() - this->get_x(), 2) 
                 + pow(neighbor->get_y() - this->get_y(), 2));
     }
-    // gets neighbor with smallest alphanumeric name, returns null if no options
+    // gets neighbor with smallest alphanumeric name, returns NULL if no options
     Node * get_available_neighbor() {
-      for(Node *neighbor : neighbors)
-        if(!neighbor->is_visited())
-          return neighbor;
-      return nullptr;
+      for(int i = 0; i < neighbors.size(); i++) {
+        if(!neighbors.at(i)->is_visited())
+          return neighbors.at(i);
+      }
+      return NULL;
     }
     string get_name() { return name; }
     float get_x() { return x; }
@@ -40,7 +42,7 @@ class Node
     string name;
     float y;
     float x;
-    bool visited = false;
+    bool visited;
     vector<Node *> neighbors;
 };
 
@@ -55,7 +57,7 @@ class Network
       if(nodes.find(name) != nodes.end())
         return nodes.at(name);
       else
-        return nullptr;
+        return NULL;
     }
     void find_path() { // dfs
       Node *current, *neighbor;
@@ -67,7 +69,7 @@ class Network
           break;
         }
         neighbor = current->get_available_neighbor();
-        if (neighbor != nullptr) { // add next destination
+        if (neighbor != NULL) { // add next destination
           path.push(neighbor);
         } else { // no available neighbors, go back
           path.pop();
@@ -155,7 +157,7 @@ struct NetworkIO
       cout << "Enter the name of the starting node: ";
       cin >> name;
       Node * start_node = network->get_node(name);
-      if(start_node != nullptr) {
+      if(start_node != NULL) {
         network->set_start_node(start_node);
         valid_input = 1;
       } else {
@@ -170,7 +172,7 @@ struct NetworkIO
       cout << "Enter the name of the destination node: ";
       cin >> name;
       Node * end_node = network->get_node(name);
-      if(end_node != nullptr) {
+      if(end_node != NULL) {
         Node * start_node = network->get_start_node();
         if(end_node == start_node) {
           cout << name << " is the starting node. Try again." << endl;
