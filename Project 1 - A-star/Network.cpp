@@ -1,4 +1,5 @@
 #include <stack>
+#include <queue>	//priority queue
 #include <map>
 #include <vector>
 #include <iostream>
@@ -45,6 +46,23 @@ class Node
     bool visited; // do we still need to mark visited? need a different mechanism?
     double straight_line_dist; // distance to end_node calc'd upon visiting for first time
     vector<Node *> neighbors;
+};
+
+struct open_path
+{
+	stack<Node *> path;
+	string top_name;
+	double dist_traveled;
+	double straight_line_dist;
+	double est_dist;
+};
+
+//this class is used to compare all elements of pq; sets order in pq from smallest to largest, according to est_dist
+class compareFunct {
+public:
+	double operator() (const open_path &a, const open_path &b) {
+		return a.est_dist > b.est_dist;
+	}
 };
 
 class Network
@@ -113,6 +131,7 @@ class Network
     stack<Node*> get_path() { return path; }
     float get_total_distance() { return total_distance; }
     void set_total_distance(float distance) { total_distance = distance; }
+	
   private:
     map<string, Node *> nodes;
     stack<Node *> path; // marked for deletion
@@ -120,15 +139,7 @@ class Network
     Node *end_node;
     float total_distance; // marked for deletion
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
-    // priority queue of open_paths; where to overload > operator?
-};
-
-struct open_path
-{
-  stack<Node *> path;
-  string top_name;
-  double dist_traveled;
-  double est_dist;
+	priority_queue<open_path, vector<open_path>, compareFunct> pq;
 };
 
 struct NetworkIO
@@ -169,7 +180,7 @@ struct NetworkIO
 			iss >> name;
 			iss >> num_neighbors;
 
-      map<string, Node *> nodes = network->get_nodes();
+			map<string, Node *> nodes = network->get_nodes();
 			Node* n = nodes.at(name);
 			vector<Node*> node_neighbors;
 
