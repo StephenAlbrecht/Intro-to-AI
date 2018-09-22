@@ -23,20 +23,20 @@ class Node
       return sqrt(pow(neighbor->get_x() - this->get_x(), 2) 
                 + pow(neighbor->get_y() - this->get_y(), 2));
     }
-    // gets neighbor with smallest alphanumeric name, returns NULL if no options
+    // gets neighbor with smallest alphanumeric name, returns nullptr if no options
     Node * get_available_neighbor() {
       for(int i = 0; i < neighbors.size(); i++) {
         if(!neighbors.at(i)->is_visited())
           return neighbors.at(i);
       }
-      return NULL;
+      return nullptr;
     }
     string get_name() { return name; }
     float get_x() { return x; }
     float get_y() { return y; }
     bool is_visited() { return visited; }
     void set_visited() { visited = true; }
-    vector<Node *> get_neighbors() { return neighbors; }
+    vector<Node *>* get_neighbors() { return &neighbors; }
     void set_neighbors(vector<Node *> neighbors) { this->neighbors = neighbors; }
   private:
     string name;
@@ -58,7 +58,7 @@ class Network
       if(nodes.find(name) != nodes.end())
         return nodes.at(name);
       else
-        return NULL;
+        return nullptr;
     }
     void find_path() { // update for use with heuristics
       Node *current, *neighbor;
@@ -70,7 +70,7 @@ class Network
           break;
         }
         neighbor = current->get_available_neighbor();
-        if (neighbor != NULL) { // add next destination
+        if (neighbor != nullptr) { // add next destination
           path.push(neighbor);
         } else { // no available neighbors, go back
           path.pop();
@@ -79,8 +79,31 @@ class Network
     }
     // steps once through system
     void step() {}
-    // remove matching nodes from map and from any node listing it as a neighbor
-    void exclude_nodes(vector<Node *> excluded_nodes) {}
+    void exclude_nodes(vector<string> excluded_nodes) {
+      for(string name : excluded_nodes) {
+        // check if node exists
+        Node* excluded_node = get_node(name);
+        if(get_node(name) == nullptr)
+          continue;      
+        // remove from each node's list of neigbors if they are connected
+        //map<string, Node *>::iterator map_it = nodes.begin();
+        for(pair<string, Node *> element : nodes) {
+          Node *node = element.second;
+          vector<Node *> *neighbors = node->get_neighbors();
+          vector<Node *>::iterator neighbor_location =
+              find(neighbors->begin(), neighbors->end(), excluded_node);
+          if(neighbor_location != neighbors->end()) {
+            cout << "found neighbor match" << endl;
+            *neighbors->erase(neighbor_location);
+          } else {
+            cout << node->get_name() << " not connected to " << name << endl;
+          }
+        }
+        // remove from map and delete the Node object
+        nodes.erase(nodes.find(name));
+        delete excluded_node;
+      }
+    }
     void set_start_node(Node *node) { start_node = node; }
     void set_end_node(Node *node) { end_node = node; }
     Node * get_start_node() { return start_node; }
@@ -169,7 +192,20 @@ struct NetworkIO
   // prompts user, then sets network.fewest_cities T/F
   static void get_heuristic(Network *network) {}
   // prompts user to enter cities on one line, stores in vector and returns 
-  static vector<Node *> get_excluded_nodes() {} 
+  static vector<string> get_excluded_nodes() {
+    cout << "Enter the cities you wish to exclude, separated by spaces:" << endl;
+    string line, excluded_node_name;
+    vector<string> excluded_nodes;
+    getline(cin, line);
+    istringstream inSS;
+    inSS.str(line);					
+    while(inSS.good()) {			// while stream has no error
+      inSS >> excluded_node_name;
+      excluded_nodes.push_back(excluded_node_name);
+    }
+    cout << excluded_nodes.at(0) << " / " << excluded_nodes.at(1) << endl;
+    return excluded_nodes;
+  } 
   static void set_start_node(Network *network) {
     int valid_input = 0;
     string name;
@@ -177,7 +213,7 @@ struct NetworkIO
       cout << "Enter the name of the starting node: ";
       cin >> name;
       Node * start_node = network->get_node(name);
-      if(start_node != NULL) {
+      if(start_node != nullptr) {
         network->set_start_node(start_node);
         valid_input = 1;
       } else {
@@ -192,7 +228,7 @@ struct NetworkIO
       cout << "Enter the name of the destination node: ";
       cin >> name;
       Node * end_node = network->get_node(name);
-      if(end_node != NULL) {
+      if(end_node != nullptr) {
         Node * start_node = network->get_start_node();
         if(end_node == start_node) {
           cout << name << " is the starting node. Try again." << endl;
@@ -236,6 +272,7 @@ int main() {
   Network network;
   NetworkIO::load_locations(&network);
   NetworkIO::load_connections(&network);
+  network.exclude_nodes(NetworkIO::get_excluded_nodes());
   NetworkIO::set_start_node(&network);
   NetworkIO::set_end_node(&network);
   network.find_path();
