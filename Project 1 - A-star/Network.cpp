@@ -213,7 +213,7 @@ struct NetworkIO
       while(inSS.good()) {
         inSS >> selection;
       }
-      if(selection != 1 || selection != 2) {
+      if(selection < 1 || selection > 2) {
         cout << "Please enter 1 or 2." << endl;
       }
     }
@@ -222,7 +222,7 @@ struct NetworkIO
   }
   // prompts user to enter cities on one line, stores in vector and returns 
   static vector<string> get_excluded_nodes() {
-    cout << "Enter the cities you wish to exclude, separated by spaces:" << endl;
+    cout << "Enter any cities you wish to exclude, separated by spaces, or press enter:" << endl;
     string line, excluded_node_name;
     vector<string> excluded_nodes;
     getline(cin, line);
