@@ -42,7 +42,8 @@ class Node
     string name;
     float y;
     float x;
-    bool visited;
+    bool visited; // do we still need to mark visited? need a different mechanism?
+    double straight_line_dist; // distance to end_node calc'd upon visiting for first time
     vector<Node *> neighbors;
 };
 
@@ -59,7 +60,7 @@ class Network
       else
         return NULL;
     }
-    void find_path() { // dfs
+    void find_path() { // update for use with heuristics
       Node *current, *neighbor;
       path.push(start_node);
       while(!path.empty()) { // empty path = no solution
@@ -76,6 +77,10 @@ class Network
         }
       }
     }
+    // steps once through system
+    void step() {}
+    // remove matching nodes from map and from any node listing it as a neighbor
+    void exclude_nodes(vector<Node *> excluded_nodes) {}
     void set_start_node(Node *node) { start_node = node; }
     void set_end_node(Node *node) { end_node = node; }
     Node * get_start_node() { return start_node; }
@@ -86,10 +91,20 @@ class Network
     void set_total_distance(float distance) { total_distance = distance; }
   private:
     map<string, Node *> nodes;
-    stack<Node *> path;
+    stack<Node *> path; // marked for deletion
     Node *start_node;
     Node *end_node;
-    float total_distance;
+    float total_distance; // marked for deletion
+    bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
+    // priority queue of open_paths; where to overload > operator?
+};
+
+struct open_path
+{
+  stack<Node *> path;
+  string top_name;
+  double dist_traveled;
+  double est_dist;
 };
 
 struct NetworkIO
@@ -113,6 +128,7 @@ struct NetworkIO
     }
     file.close();
   }
+  // should we delete predicate since nodes are no longer chosen alphanumerically?
   static bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
   static void load_connections(Network *network) {
     ifstream file;
@@ -150,6 +166,10 @@ struct NetworkIO
 		}
 		file.close();
 	}
+  // prompts user, then sets network.fewest_cities T/F
+  static void get_heuristic(Network *network) {}
+  // prompts user to enter cities on one line, stores in vector and returns 
+  static vector<Node *> get_excluded_nodes() {} 
   static void set_start_node(Network *network) {
     int valid_input = 0;
     string name;
@@ -208,6 +228,8 @@ struct NetworkIO
     network->set_total_distance(distance);
     cout << "Total Length: " << floor(network->get_total_distance()) << endl;
   }
+  // prints current state of the network according to sample output in document
+  static void print_step(Network *network) {}
 };
 
 int main() {
