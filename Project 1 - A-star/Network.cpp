@@ -50,7 +50,9 @@ class Node
 class Network
 {
   public:
-    Network() {};
+    Network() {
+      fewest_cities = false;
+    };
     void add_node(Node *node) {
       nodes.insert(pair<string, Node *>(node->get_name(), node));
     }
@@ -93,10 +95,7 @@ class Network
           vector<Node *>::iterator neighbor_location =
               find(neighbors->begin(), neighbors->end(), excluded_node);
           if(neighbor_location != neighbors->end()) {
-            cout << "found neighbor match" << endl;
             *neighbors->erase(neighbor_location);
-          } else {
-            cout << node->get_name() << " not connected to " << name << endl;
           }
         }
         // remove from map and delete the Node object
@@ -108,6 +107,8 @@ class Network
     void set_end_node(Node *node) { end_node = node; }
     Node * get_start_node() { return start_node; }
     Node * get_end_node() { return end_node; }
+    void set_fewest_cities() { fewest_cities = true; }
+    bool get_fewest_cities() { return fewest_cities; }
     map<string, Node *> get_nodes() { return nodes; }
     stack<Node*> get_path() { return path; }
     float get_total_distance() { return total_distance; }
@@ -190,7 +191,24 @@ struct NetworkIO
 		file.close();
 	}
   // prompts user, then sets network.fewest_cities T/F
-  static void get_heuristic(Network *network) {}
+  static void get_heuristic(Network *network) {
+    cout << "Choose heuristic: (1) Straight line distance or (2) Fewest cities" << endl;
+    int selection = 0;
+    string line;
+    while(selection < 1 || selection > 2) {
+      getline(cin, line);
+      istringstream inSS;
+      inSS.str(line);
+      while(inSS.good()) {
+        inSS >> selection;
+      }
+      if(selection != 1 || selection != 2) {
+        cout << "Please enter 1 or 2." << endl;
+      }
+    }
+    if(selection == 2)
+      network->set_fewest_cities();
+  }
   // prompts user to enter cities on one line, stores in vector and returns 
   static vector<string> get_excluded_nodes() {
     cout << "Enter the cities you wish to exclude, separated by spaces:" << endl;
@@ -203,7 +221,6 @@ struct NetworkIO
       inSS >> excluded_node_name;
       excluded_nodes.push_back(excluded_node_name);
     }
-    cout << excluded_nodes.at(0) << " / " << excluded_nodes.at(1) << endl;
     return excluded_nodes;
   } 
   static void set_start_node(Network *network) {
@@ -272,6 +289,7 @@ int main() {
   Network network;
   NetworkIO::load_locations(&network);
   NetworkIO::load_connections(&network);
+  NetworkIO::get_heuristic(&network);
   network.exclude_nodes(NetworkIO::get_excluded_nodes());
   NetworkIO::set_start_node(&network);
   NetworkIO::set_end_node(&network);
