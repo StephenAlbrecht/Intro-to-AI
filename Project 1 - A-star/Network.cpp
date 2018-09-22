@@ -25,13 +25,6 @@ class Node
                 + pow(neighbor->get_y() - this->get_y(), 2));
     }
     // gets neighbor with smallest alphanumeric name, returns nullptr if no options
-    Node * get_available_neighbor() {
-      for(int i = 0; i < neighbors.size(); i++) {
-        if(!neighbors.at(i)->is_visited())
-          return neighbors.at(i);
-      }
-      return nullptr;
-    }
     string get_name() { return name; }
     float get_x() { return x; }
     float get_y() { return y; }
@@ -48,14 +41,20 @@ class Node
     vector<Node *> neighbors;
 };
 
-struct open_path
+typedef struct open_path
 {
-	stack<Node *> path;
-	string top_name;
-	double dist_traveled;
-	double straight_line_dist;
-	double est_dist;
-};
+  open_path() {};
+  void update(Node * end_node) {
+    top_name = path.top()->get_name();
+    est_dist = dist_traveled + path.top()->dist(end_node);
+    est_cities = path.size() + 1;
+  }
+  stack<Node *> path;
+  string top_name;
+  int est_cities;
+  double dist_traveled;
+  double est_dist;
+} open_path;
 
 //this class is used to compare all elements of pq; sets order in pq from smallest to largest, according to est_dist
 class compareFunct {
@@ -80,25 +79,26 @@ class Network
       else
         return nullptr;
     }
-    void find_path() { // update for use with heuristics
-      Node *current, *neighbor;
-      path.push(start_node);
-      while(!path.empty()) { // empty path = no solution
-        current = path.top();
-        current->set_visited();
-        if(current == end_node) { // found!
-          break;
-        }
-        neighbor = current->get_available_neighbor();
-        if (neighbor != nullptr) { // add next destination
-          path.push(neighbor);
-        } else { // no available neighbors, go back
-          path.pop();
-        }
-      }
+    void find_path() { // step() until best path found
     }
+    void create_starting_path() {
+      open_path *initial = new open_path();
+      initial->path.push(start_node);
+      initial->dist_traveled = 0;
+      initial->update(end_node);
+      current = start_node;
+      // create open_path in the priority queue for every one of the starting node's neighbors
+      /* make a new open path constructor that takes an open_path and the neighbor as
+       * arguments; copy the stack and push the neighbor on top */
+    }
+
     // steps once through system
-    void step() {}
+    void step() {
+      // choose path at the top of priority queue
+      // current = top of that path
+      // add open_paths to pq for each of that node's neighbors
+      // remove inferior open_paths that have the same top
+    }
     void exclude_nodes(vector<string> excluded_nodes) {
       for(string name : excluded_nodes) {
         // check if node exists
@@ -106,7 +106,6 @@ class Network
         if(get_node(name) == nullptr)
           continue;      
         // remove from each node's list of neigbors if they are connected
-        //map<string, Node *>::iterator map_it = nodes.begin();
         for(pair<string, Node *> element : nodes) {
           Node *node = element.second;
           vector<Node *> *neighbors = node->get_neighbors();
@@ -128,18 +127,13 @@ class Network
     void set_fewest_cities() { fewest_cities = true; }
     bool get_fewest_cities() { return fewest_cities; }
     map<string, Node *> get_nodes() { return nodes; }
-    stack<Node*> get_path() { return path; }
-    float get_total_distance() { return total_distance; }
-    void set_total_distance(float distance) { total_distance = distance; }
-	
   private:
     map<string, Node *> nodes;
-    stack<Node *> path; // marked for deletion
     Node *start_node;
     Node *end_node;
-    float total_distance; // marked for deletion
+    Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
-	priority_queue<open_path, vector<open_path>, compareFunct> pq;
+  	priority_queue<open_path, vector<open_path>, compareFunct> pq;
 };
 
 struct NetworkIO
@@ -163,8 +157,6 @@ struct NetworkIO
     }
     file.close();
   }
-  // should we delete predicate since nodes are no longer chosen alphanumerically?
-  static bool predicate(Node* a, Node* b) { return a->get_name() < b->get_name(); }
   static void load_connections(Network *network) {
     ifstream file;
 		string line;
@@ -192,9 +184,6 @@ struct NetworkIO
 				Node* neighbor = nodes.at(neighbor_name);
 				node_neighbors.push_back(neighbor);
 			}
-
-			// Sorts node_neighbors according to predicate function: by node name;
-			sort(node_neighbors.begin(), node_neighbors.end(), NetworkIO::predicate);
 
 			//add the node_neighbors vector to the current node on input file
 			nodes.at(name)->set_neighbors(node_neighbors);
@@ -269,31 +258,35 @@ struct NetworkIO
       }
     }
   }
-  static void print_path(Network *network) {
-    stack<Node*> path_copy = network->get_path();
-    stack<Node*> path_result;
-    if(path_copy.empty())
-      cout << "No path found!" << endl;
-    while (!path_copy.empty()) {
-      path_result.push(path_copy.top());
-      path_copy.pop();
-    }
-    Node* current = path_result.top();
-    Node* neighbor;
-    float distance = 0.0;
-    while (path_result.size() > 1 ) {
-      path_result.pop();
-      neighbor = path_result.top();
-      cout << "From " << current->get_name() << " to " << neighbor->get_name() 
-          << ". Length: " << floor(current->dist(neighbor)) << endl;
-      distance += current->dist(neighbor);
-      current = path_result.top();
-    }
-    network->set_total_distance(distance);
-    cout << "Total Length: " << floor(network->get_total_distance()) << endl;
-  }
+  // static void print_path(Network *network) {
+  //   stack<Node*> path_copy = network->get_path();
+  //   stack<Node*> path_result;
+  //   if(path_copy.empty())
+  //     cout << "No path found!" << endl;
+  //   while (!path_copy.empty()) {
+  //     path_result.push(path_copy.top());
+  //     path_copy.pop();
+  //   }
+  //   Node* current = path_result.top();
+  //   Node* neighbor;
+  //   float distance = 0.0;
+  //   while (path_result.size() > 1 ) {
+  //     path_result.pop();
+  //     neighbor = path_result.top();
+  //     cout << "From " << current->get_name() << " to " << neighbor->get_name() 
+  //         << ". Length: " << floor(current->dist(neighbor)) << endl;
+  //     distance += current->dist(neighbor);
+  //     current = path_result.top();
+  //   }
+  //   network->set_total_distance(distance);
+  //   cout << "Total Length: " << floor(network->get_total_distance()) << endl;
+  // }
   // prints current state of the network according to sample output in document
-  static void print_step(Network *network) {}
+  static void print_step(Network *network) {
+    // print network->current->getname
+    // print current's neighbors
+    // print top_name of each open path and est_dist / est_cities depending on heuristic
+  }
 };
 
 int main() {
@@ -304,8 +297,8 @@ int main() {
   network.exclude_nodes(NetworkIO::get_excluded_nodes());
   NetworkIO::set_start_node(&network);
   NetworkIO::set_end_node(&network);
-  network.find_path();
-  NetworkIO::print_path(&network);
-  cin.sync();
-  cin.get();
+  // network.find_path();
+  // NetworkIO::print_path(&network);
+  // cin.sync();
+  // cin.get();
 }
