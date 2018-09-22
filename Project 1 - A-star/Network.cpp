@@ -1,4 +1,5 @@
 #include <stack>
+#include <queue>	//priority queue
 #include <map>
 #include <vector>
 #include <iostream>
@@ -54,6 +55,14 @@ typedef struct open_path
   double dist_traveled;
   double est_dist;
 } open_path;
+
+//this class is used to compare all elements of pq; sets order in pq from smallest to largest, according to est_dist
+class compareFunct {
+public:
+	double operator() (const open_path &a, const open_path &b) {
+		return a.est_dist > b.est_dist;
+	}
+};
 
 class Network
 {
@@ -119,7 +128,7 @@ class Network
     Node *end_node;
     Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
-    // priority queue of open_paths; where to overload > operator?
+  	priority_queue<open_path, vector<open_path>, compareFunct> pq;
 };
 
 struct NetworkIO
@@ -158,7 +167,7 @@ struct NetworkIO
 			iss >> name;
 			iss >> num_neighbors;
 
-      map<string, Node *> nodes = network->get_nodes();
+			map<string, Node *> nodes = network->get_nodes();
 			Node* n = nodes.at(name);
 			vector<Node*> node_neighbors;
 
