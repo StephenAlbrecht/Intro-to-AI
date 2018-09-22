@@ -88,11 +88,16 @@ class Network
       initial->update(end_node);
       current = start_node;
       // create open_path in the priority queue for every one of the starting node's neighbors
-      
+      /* make a new open path constructor that takes an open_path and the neighbor as
+       * arguments; copy the stack and push the neighbor on top */
     }
+
     // steps once through system
     void step() {
-      // 
+      // choose path at the top of priority queue
+      // current = top of that path
+      // add open_paths to pq for each of that node's neighbors
+      // remove inferior open_paths that have the same top
     }
     void exclude_nodes(vector<string> excluded_nodes) {
       for(string name : excluded_nodes) {
@@ -277,7 +282,11 @@ struct NetworkIO
   //   cout << "Total Length: " << floor(network->get_total_distance()) << endl;
   // }
   // prints current state of the network according to sample output in document
-  static void print_step(Network *network) {}
+  static void print_step(Network *network) {
+    // print network->current->getname
+    // print current's neighbors
+    // print top_name of each open path and est_dist / est_cities depending on heuristic
+  }
 };
 
 int main() {
