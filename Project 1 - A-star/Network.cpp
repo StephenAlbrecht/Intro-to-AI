@@ -139,7 +139,7 @@ class Network
           nbr_path.path.push(neighbor);
           nbr_path.update(end_node);
           // remove inferior open_paths that have the same top
-          remove_inferior_paths(nbr_path);
+          remove_inferior_paths(&nbr_path);
         }
         return 1;
       } else { // no solution
@@ -168,12 +168,13 @@ class Network
       }
     }
     void remove_inferior_paths(open_path* target) {
-      
+
     }
     void set_start_node(Node *node) { start_node = node; }
     void set_end_node(Node *node) { end_node = node; }
     Node * get_start_node() { return start_node; }
     Node * get_end_node() { return end_node; }
+    Node * get_current() {return current; }
     void set_fewest_cities() { fewest_cities = true; }
     bool get_fewest_cities() { return fewest_cities; }
     map<string, Node *> get_nodes() { return nodes; }
@@ -339,8 +340,16 @@ struct NetworkIO
   // prints current state of the network according to sample output in document
   static void print_step(Network *network) {
     // print network->current->getname
+    Node * current = network->get_current();
+    cout << "Current node: " << current->get_name() << endl;
     // print current's neighbors
+    cout << "Current node's neighbors: ";
+    for(Node * neighbor : *current->get_neighbors()) {
+      cout << neighbor->get_name() << " ";
+    }
+    cout << endl << "Open paths: ";
     // print top_name of each open path and est_dist / est_cities depending on heuristic
+
   }
 };
 
