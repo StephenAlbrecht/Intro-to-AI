@@ -140,6 +140,7 @@ class Network
     }
 
     // steps once through system
+<<<<<<< HEAD
 	int step() {
 	  //choose path at the top of priority queue
 	  open_path * best_path;
@@ -167,6 +168,29 @@ class Network
 	}
 
 
+=======
+    int step() {
+      // choose path at the top of priority queue
+      open_path * best_path;
+      if(!pq.empty()) {
+        // current = top of that path
+        best_path = pq.top();
+        pq.pop();
+        current = best_path->path.top();
+        // add open_paths to pq for each of that node's neighbors
+        for(Node * neighbor : *current->get_neighbors()) {
+          open_path nbr_path = *best_path;
+          nbr_path.path.push(neighbor);
+          nbr_path.update(end_node);
+          // remove inferior open_paths that have the same top
+          remove_inferior_paths(nbr_path);
+        }
+        return 1;
+      } else { // no solution
+        return 0;
+      }
+    }
+>>>>>>> master
     void exclude_nodes(vector<string> excluded_nodes) {
 	  for(string name : excluded_nodes) {
         // check if node exists
@@ -188,6 +212,9 @@ class Network
         delete excluded_node;
       }
     }
+    void remove_inferior_paths(open_path* target) {
+      
+    }
     void set_start_node(Node *node) { start_node = node; }
     void set_end_node(Node *node) { end_node = node; }
     Node * get_start_node() { return start_node; }
@@ -201,7 +228,11 @@ class Network
     Node *end_node;
     Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
+<<<<<<< HEAD
   	priority_queue<open_path*, vector<open_path*>, compareFunct> pq;
+=======
+  	priority_queue<open_path *, vector<open_path *>, compareFunct> pq;
+>>>>>>> master
 };
 
 struct NetworkIO
