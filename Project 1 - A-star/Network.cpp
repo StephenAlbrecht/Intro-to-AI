@@ -83,8 +83,8 @@ typedef struct open_path
 //used to compare all elements of pq; auto orders pq from smallest to largest est_dist, i.e. f(x)
 class compareFunct {
 public:
-	double operator() (const open_path &a, const open_path &b) {
-		return a.est_dist > b.est_dist;
+	double operator() (const open_path *a, const open_path *b) {
+		return a->est_dist > b->est_dist;
 	}
 };
 
@@ -125,12 +125,26 @@ class Network
     }
 
     // steps once through system
-    void step() {
+    int step() {
       // choose path at the top of priority queue
-		pq.top();
-      // current = top of that path
-      // add open_paths to pq for each of that node's neighbors
-      // remove inferior open_paths that have the same top
+      open_path * best_path;
+      if(!pq.empty()) {
+        // current = top of that path
+        best_path = pq.top();
+        pq.pop();
+        current = best_path->path.top();
+        // add open_paths to pq for each of that node's neighbors
+        for(Node * neighbor : *current->get_neighbors()) {
+          open_path nbr_path = *best_path;
+          nbr_path.path.push(neighbor);
+          nbr_path.update(end_node);
+          // remove inferior open_paths that have the same top
+          remove_inferior_paths(nbr_path);
+        }
+        return 1;
+      } else { // no solution
+        return 0;
+      }
     }
     void exclude_nodes(vector<string> excluded_nodes) {
       for(string name : excluded_nodes) {
@@ -153,6 +167,9 @@ class Network
         delete excluded_node;
       }
     }
+    void remove_inferior_paths(open_path* target) {
+      
+    }
     void set_start_node(Node *node) { start_node = node; }
     void set_end_node(Node *node) { end_node = node; }
     Node * get_start_node() { return start_node; }
@@ -166,7 +183,7 @@ class Network
     Node *end_node;
     Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
-  	priority_queue<open_path, vector<open_path>, compareFunct> pq;
+  	priority_queue<open_path *, vector<open_path *>, compareFunct> pq;
 };
 
 struct NetworkIO
