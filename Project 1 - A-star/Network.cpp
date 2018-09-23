@@ -107,20 +107,32 @@ class Network
     }
 
 	//add all the paths of the starting node
-    void create_starting_path() {
-      open_path *initial =  new open_path();
-      initial->path.push(start_node);
-      initial->dist_traveled = 0;
+	void create_starting_path() {
+		open_path *initial = new open_path();
+		initial->path.push(start_node);
+		initial->dist_traveled = 0;
 
-	  for (int i = 0; i < start_node->get_neighbor_count(); i++) {
-		  open_path *new_path =  new open_path();
-		  new_path->path.push(start_node);
-		  new_path->path.push(start_node->get_neighbors()->at(i));
-		  pq.push(new_path);
+		for (int i = 0; i < start_node->get_neighbor_count(); i++) {
+			open_path *new_path = new open_path();
+			new_path->path.push(start_node);
+			new_path->path.push(start_node->get_neighbors()->at(i));
+			pq.push(new_path);
+		}
+		initial->update(end_node);
+		current = start_node;
+	}
+
+	void remove_inferior_paths(open_path * target) {
+	  open_path * op;
+	  queue<open_path> temp_queue;
+	  for (int i = 0; i < pq.size(); i++) {
+		  op = pq.top();
+		  temp_queue.push(op);
+		  pq.pop();
 	  }
-      initial->update(end_node);
-      current = start_node;
-
+	  for (open_path op : temp_queue) {
+	  }
+	}
 
       // create open_path in the priority queue for every one of the starting node's neighbors
       /* make a new open path constructor that takes an open_path and the neighbor as
@@ -144,7 +156,7 @@ class Network
 			pq.push(&nbr_path);
 		  }
 		// remove inferior open_paths that have the same top
-		  for (open_path * op : pq) {
+		  //remove_inferior_paths(open_path * target);
 
 		}
 		return 1;
@@ -153,6 +165,8 @@ class Network
 		return 0;
 	  }
 	}
+
+
     void exclude_nodes(vector<string> excluded_nodes) {
 	  for(string name : excluded_nodes) {
         // check if node exists
