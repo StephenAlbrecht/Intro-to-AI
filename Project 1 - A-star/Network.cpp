@@ -48,13 +48,13 @@ class Node
 typedef struct open_path
 {
   open_path() {};
-  open_path(Node* start_node, Node* end_node) {
+  /*open_path(Node* start_node, Node* end_node) {
 	  start = start_node;
 	  end = end_node;
 	  path.push(start);
 	  path.push(end);
-	  //update(get_end_node());	//not sure how to pass in the end node; get_end_node() function belongs to Network class
-  }
+	  //update(get_end_node());	//call this function within the Network class when an open_path is created
+  }*/
 
   double calc_dist_traveled() {
 	Node* n = path.top();
@@ -83,8 +83,8 @@ typedef struct open_path
 //used to compare all elements of pq; auto orders pq from smallest to largest est_dist, i.e. f(x)
 class compareFunct {
 public:
-	double operator() (const open_path &a, const open_path &b) {
-		return a.est_dist > b.est_dist;
+	double operator() (const open_path *a, const open_path *b) {
+		return a->est_dist > b->est_dist;
 	}
 };
 
@@ -108,12 +108,15 @@ class Network
 
 	//add all the paths of the starting node
     void create_starting_path() {
-      open_path *initial = new open_path();
+      open_path *initial =  new open_path();
       initial->path.push(start_node);
       initial->dist_traveled = 0;
+
 	  for (int i = 0; i < start_node->get_neighbor_count(); i++) {
-		  open_path* new_path = new open_path(start_node, start_node->get_neighbors()->at(i));
-		  
+		  open_path *new_path =  new open_path();
+		  new_path->path.push(start_node);
+		  new_path->path.push(start_node->get_neighbors()->at(i));
+		  pq.push(new_path);
 	  }
       initial->update(end_node);
       current = start_node;
@@ -125,15 +128,33 @@ class Network
     }
 
     // steps once through system
-    void step() {
-      // choose path at the top of priority queue
-		pq.top();
-      // current = top of that path
-      // add open_paths to pq for each of that node's neighbors
-      // remove inferior open_paths that have the same top
-    }
+	int step() {
+	  //choose path at the top of priority queue
+	  open_path * best_path;
+	  if (!pq.empty()) {
+	    // current = top of that path
+		best_path = pq.top();
+		pq.pop();
+		current = best_path->path.top();
+		// add open_paths to pq for each of that node's neighbors
+		  for (Node * neighbor : *current->get_neighbors()) {
+			open_path nbr_path = *best_path;
+			nbr_path.path.push(neighbor);
+			nbr_path.update(end_node);
+			pq.push(&nbr_path);
+		  }
+		// remove inferior open_paths that have the same top
+		  for (open_path * op : pq) {
+
+		}
+		return 1;
+	  }
+	  else { // no solution
+		return 0;
+	  }
+	}
     void exclude_nodes(vector<string> excluded_nodes) {
-      for(string name : excluded_nodes) {
+	  for(string name : excluded_nodes) {
         // check if node exists
         Node* excluded_node = get_node(name);
         if(get_node(name) == nullptr)
@@ -166,7 +187,7 @@ class Network
     Node *end_node;
     Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
-  	priority_queue<open_path, vector<open_path>, compareFunct> pq;
+  	priority_queue<open_path*, vector<open_path*>, compareFunct> pq;
 };
 
 struct NetworkIO
