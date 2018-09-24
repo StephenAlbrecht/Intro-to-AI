@@ -105,8 +105,15 @@ public:
 	}
 	void find_path() { // step() until best path found
 		while (step() != 0) {
+		}
+		if (pq.empty())
+			cout << "Valid path does not exist." << endl;
+		else {
+			cout << "Valid path found!" << endl;
 
 		}
+
+
 	}
 
 	//add all the paths of the starting node
@@ -132,12 +139,18 @@ public:
 
 			//current is the best path's last node; i.e. path ABCD, current = D
 			current = best_path->path.top();
+
 			// add open_paths to pq for each of that node's neighbors
 			for (Node * neighbor : *current->get_neighbors()) {
 				open_path nbr_path = *best_path;
 				nbr_path.path.push(neighbor);
 				nbr_path.update(end_node);
+				pq.push(&nbr_path);
 				remove_inferior_paths(&nbr_path);
+			}
+			//test to see if we've found a valid, shortest path
+			if (pq.top()->top_name.compare(end_node->get_name()) == 0) {
+				return 0;
 			}
 			return 1;
 		}
@@ -170,8 +183,8 @@ public:
 		//copy all the pq elements to temp_vector, then make pq empty
 		while (!pq.empty()) {
 			op = pq.top();
-			temp_vector.push_back(op);
 			pq.pop();
+			temp_vector.push_back(op);
 		}
 
 		//erase any path that matches top_name and has a larger est_dist than target
@@ -188,7 +201,7 @@ public:
 
 		//copy the remaining temp_vector back into priority_queue (pq)
 		while (!temp_vector.empty()) {
-			op = temp_vector.front();
+			op = temp_vector.back();
 			pq.push(op);
 			temp_vector.pop_back();
 		}
