@@ -420,7 +420,7 @@ struct NetworkIO
 
 	
 	static void print_path(Network *network) {
-		//updated version
+
 		stack<Node*> path_copy = network->get_pq().top()->path;
 		stack<Node*> path_result;
 		double total_distance = 0.0;
