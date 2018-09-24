@@ -48,13 +48,13 @@ private:
 typedef struct open_path
 {
 	open_path() {};
-	open_path(Node* start_node, Node* end_node) {
+	/*open_path(Node* start_node, Node* end_node) {
 		start = start_node;
 		end = end_node;
 		path.push(start);
 		path.push(end);
 		//update(get_end_node());	//not sure how to pass in the end node; get_end_node() function belongs to Network class
-	}
+	}*/
 
 	double calc_dist_traveled() {
 		Node* n = path.top();
@@ -104,47 +104,42 @@ public:
 			return nullptr;
 	}
 	void find_path() { // step() until best path found
+		while (step() != 0) {
+
+		}
 	}
 
 	//add all the paths of the starting node
 	void create_starting_path() {
-		open_path *initial = new open_path();
-		initial->path.push(start_node);
-		initial->dist_traveled = 0;
-		for (int i = 0; i < start_node->get_neighbor_count(); i++) {
-			open_path* new_path = new open_path(start_node, start_node->get_neighbors()->at(i));
-
+		for (Node* neighbor : *start_node->get_neighbors()) {
+			open_path *new_path = new open_path();
+			new_path->path.push(start_node);
+			new_path->path.push(neighbor);
+			new_path->update(end_node);
+			pq.push(new_path);
 		}
-		initial->update(end_node);
-		current = start_node;
-
-
-		// create open_path in the priority queue for every one of the starting node's neighbors
-		/* make a new open path constructor that takes an open_path and the neighbor as
-		* arguments; copy the stack and push the neighbor on top */
 	}
 
 	// steps once through system
 	int step() {
-		// choose path at the top of priority queue
-		open_path * best_path;
-		if (!pq.empty()) {
-			// current = top of that path
-			best_path = pq.top();
+		
+		if (pq.empty()) {	//no solution
+			return 0;
+		}
+		else {
+			open_path * best_path = pq.top();
 			pq.pop();
+
+			//current is the best path's last node; i.e. path ABCD, current = D
 			current = best_path->path.top();
 			// add open_paths to pq for each of that node's neighbors
 			for (Node * neighbor : *current->get_neighbors()) {
 				open_path nbr_path = *best_path;
 				nbr_path.path.push(neighbor);
 				nbr_path.update(end_node);
-				// remove inferior open_paths that have the same top
-				//remove_inferior_paths(&nbr_path);
+				remove_inferior_paths(&nbr_path);
 			}
 			return 1;
-		}
-		else { // no solution
-			return 0;
 		}
 	}
 	void exclude_nodes(vector<string> excluded_nodes) {
