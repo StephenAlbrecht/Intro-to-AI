@@ -141,7 +141,7 @@ class Network
     int step() {
       
       if (pq.empty()) {	//no solution
-        return 0;
+        return -1;
       }
       else {
         open_path * best_path = pq.top();
@@ -155,19 +155,20 @@ class Network
         // add open_paths to pq for each of that node's neighbors
         if(current->path.size() > 1) {
           current->path.pop();
+          Node * prev_neighbor = current->path.top();
+          current->path.push(current_top);
           for (Node * neighbor : neighbors) {
-            if(neighbor != current->path.top()) {
+            if(neighbor != prev_neighbor) {
               open_path * nbr_path = new open_path();
               nbr_path->path = current->path;
               nbr_path->dist_traveled = current->dist_traveled;
               nbr_path->est_cities = current->est_cities;
               nbr_path->est_dist = current->est_dist;
               nbr_path->update(neighbor, end_node);
-              pq.push(nbr_path);
-              remove_inferior_paths(nbr_path);
+              if(!remove_inferior_paths(nbr_path));
+                pq.push(nbr_path);
             }
           }
-          current->path.push(current_top);
         } else {
           for (Node * neighbor : neighbors) {
             open_path * nbr_path = new open_path();
@@ -176,8 +177,8 @@ class Network
             nbr_path->est_cities = current->est_cities;
             nbr_path->est_dist = current->est_dist;
             nbr_path->update(neighbor, end_node);
-            pq.push(nbr_path);
-            remove_inferior_paths(nbr_path);
+            if(!remove_inferior_paths(nbr_path));
+              pq.push(nbr_path);
           }
         }
         //test to see if we've found a valid, shortest path
@@ -208,9 +209,10 @@ class Network
         delete excluded_node;
       }
     }
-    void remove_inferior_paths(open_path* target) {
+    bool remove_inferior_paths(open_path* target) {
       open_path * op;
       vector<open_path *> temp_vector;
+      bool delete_target = false;
 
       //copy all the pq elements to temp_vector, then make pq empty
       while (!pq.empty()) {
@@ -223,10 +225,14 @@ class Network
       vector<open_path *>::iterator iter = temp_vector.begin();
       while (iter != temp_vector.end()) {
         open_path * temp_path = *iter;
-        if (temp_path->top_name.compare(target->top_name) == 0 &&
-          temp_path->est_dist > target->est_dist) {
-          iter = temp_vector.erase(iter);
-        }
+        if (temp_path->top_name.compare(target->top_name) == 0) {
+          if(temp_path->est_dist > target->est_dist) {
+            iter = temp_vector.erase(iter);
+          } else {
+            delete_target = true;
+            break;
+          }
+        } 
         else
           ++iter;
       }
@@ -237,6 +243,7 @@ class Network
         pq.push(op);
         temp_vector.pop_back();
       }
+      return !delete_target;
     }
     void set_start_node(Node *node) { start_node = node; }
     void set_end_node(Node *node) { end_node = node; }
@@ -505,9 +512,18 @@ int main() {
   network.create_starting_path();
   cout << endl;
   if(network.is_step_by_step()) {
-    do { 
+    NetworkIO::print_step(&network);
+    int status;
+    do {
+      status = network.step();
       NetworkIO::print_step(&network);
-    } while(network.step() != 0);
+    } while(status != 0);
+    if(status == -1) {
+      cout << "//=============== NO SOLUTION ===============//" << endl;
+    } else if(status == 0) {
+      cout << "//=========== FINAL SOLUTION PATH ===========//" << endl;
+      // NetworkIO::print_path(&network);
+    }
   }
 	// network.find_path();
 	// NetworkIO::print_path(&network);
