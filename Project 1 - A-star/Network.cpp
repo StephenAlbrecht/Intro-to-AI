@@ -165,7 +165,7 @@ class Network
               nbr_path->est_cities = current->est_cities;
               nbr_path->est_dist = current->est_dist;
               nbr_path->update(neighbor, end_node);
-              if(!remove_inferior_paths(nbr_path));
+              if(remove_inferior_paths(nbr_path))
                 pq.push(nbr_path);
             }
           }
@@ -177,7 +177,7 @@ class Network
             nbr_path->est_cities = current->est_cities;
             nbr_path->est_dist = current->est_dist;
             nbr_path->update(neighbor, end_node);
-            if(!remove_inferior_paths(nbr_path));
+            if(remove_inferior_paths(nbr_path))
               pq.push(nbr_path);
           }
         }
@@ -206,6 +206,7 @@ class Network
         }
         // remove from map and delete the Node object
         nodes.erase(nodes.find(name));
+        cout << excluded_node->get_name() << " excluded" << endl;
         delete excluded_node;
       }
     }
@@ -309,7 +310,7 @@ struct NetworkIO
 			iss >> num_neighbors;
 
 			map<string, Node *> nodes = network->get_nodes();
-			Node* n = nodes.at(name);
+			// Node* n = nodes.at(name);
 			//n->set_neighbor_count(num_neighbors);
 			vector<Node*> node_neighbors;
 
@@ -428,7 +429,7 @@ struct NetworkIO
 
 		if (path_copy.empty()) 
 			cout << "No path found." << endl; 
-		
+
 		//copy the stack from path_copy to path_result
 		while (!path_copy.empty()) {
 			path_result.push(path_copy.top());
@@ -447,7 +448,6 @@ struct NetworkIO
 					first_visit_done = true;
 				}
 				else cout << "1" << endl;
-			
 			}
 			else {
 				double distance = current->dist(path_result.top());
@@ -459,7 +459,7 @@ struct NetworkIO
 			path_result.pop();
 		}
 
-		if (network->get_fewest_cities())
+    if (network->get_fewest_cities())
 			cout << "\nTotal path length = " << network->get_pq().top()->est_cities - 1 << endl;
 		else
 			cout << "\nTotal path length = " << total_distance << endl; 
