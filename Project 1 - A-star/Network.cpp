@@ -81,11 +81,10 @@ typedef struct open_path
 } open_path;
 
 //used to compare all elements of pq; auto orders pq from smallest to largest est_dist, i.e. f(x)
-class compareFunct {
-public:
-  int fewest_cities;
-  compareFunct(bool fewest_cities = false): fewest_cities(fewest_cities) {}
-	double operator() (const open_path *a, const open_path *b) {
+struct CompareFunct {
+  bool fewest_cities;
+  CompareFunct(bool fewest_cities = false): fewest_cities(fewest_cities) {}
+	bool operator() (const open_path *a, const open_path *b) const {
     switch(fewest_cities) {
       case false: return a->est_dist < b->est_dist;
       case true: return a->est_cities < b->est_cities;
@@ -221,18 +220,22 @@ class Network
     bool get_fewest_cities() { return fewest_cities; }
     void set_step_by_step() { step_by_step = true; }
     bool get_step_by_step() { return step_by_step; }
-    priority_queue<open_path*, vector<open_path *>, compareFunct> get_pq() { return pq; }
+    priority_queue<open_path*, vector<open_path *>, CompareFunct> get_pq() { return pq; }
     map<string, Node *> get_nodes() { return nodes; }
-    int field;
-    compareFunct cmp(field);
   private:
     map<string, Node *> nodes;
     Node *start_node;
     Node *end_node;
     Node *current;
-    bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
+    bool fewest_cities;
     bool step_by_step;
-  	priority_queue<open_path *, vector<open_path *>, cmp> pq(cmp);
+    // CompareFunct cmp(fewest_cities);
+    // auto comp = [fewest_cities](open_path *a, open_path *b) -> bool {
+    //   if(fewest_cities) return a->est_cities < b->est_cities;
+    //   else return a->est_dist < b->est_dist;
+    // }
+  	// priority_queue<open_path *, vector<open_path *>, decltype(comp)> pq(comp);
+  	priority_queue<open_path *, vector<open_path *>, CompareFunct> pq;
 };
 
 struct NetworkIO
