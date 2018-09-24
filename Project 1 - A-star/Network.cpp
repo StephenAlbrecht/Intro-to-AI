@@ -424,6 +424,7 @@ struct NetworkIO
 		stack<Node*> path_copy = network->get_pq().top()->path;
 		stack<Node*> path_result;
 		double total_distance = 0.0;
+		bool first_visit_done = false;
 
 		if (path_copy.empty()) 
 			cout << "No path found." << endl; 
@@ -441,7 +442,12 @@ struct NetworkIO
 			cout << current->get_name() << " to " << path_result.top()->get_name() << ": length = ";
 
 			if (network->get_fewest_cities()) {
-				cout << "1" << endl;
+				if (!first_visit_done) {
+					cout << "2" << endl;
+					first_visit_done = true;
+				}
+				else cout << "1" << endl;
+			
 			}
 			else {
 				double distance = current->dist(path_result.top());
