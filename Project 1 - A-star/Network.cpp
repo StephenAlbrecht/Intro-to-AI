@@ -206,6 +206,7 @@ class Network
         }
         // remove from map and delete the Node object
         nodes.erase(nodes.find(name));
+        cout << excluded_node->get_name() << " excluded" << endl;
         delete excluded_node;
       }
     }
