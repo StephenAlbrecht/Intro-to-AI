@@ -85,14 +85,14 @@ typedef struct open_path
 
 //used to compare all elements of pq; auto orders pq from smallest to largest est_dist, i.e. f(x)
 struct CompareFunct {
-  bool fewest_cities;
-  CompareFunct(bool fewest_cities = false): fewest_cities(fewest_cities) {}
+  bool *fewest_cities;
+  CompareFunct(bool *fewest_cities): fewest_cities(fewest_cities) {};
 	bool operator() (const open_path *a, const open_path *b) const {
-    switch(fewest_cities) {
-      case false: return a->est_dist > b->est_dist;
-      case true: return a->est_cities > b->est_cities;
-    }
-	}
+    if(*fewest_cities)
+      return a->est_cities > b->est_cities;
+    else
+      return a->est_dist > b->est_dist;
+  }
 };
 
 class Network
