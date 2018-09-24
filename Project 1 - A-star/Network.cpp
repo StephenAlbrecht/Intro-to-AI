@@ -83,8 +83,14 @@ typedef struct open_path
 //used to compare all elements of pq; auto orders pq from smallest to largest est_dist, i.e. f(x)
 class compareFunct {
 public:
+  int fewest_cities;
+  compareFunct(int fewest_cities = 0): fewest_cities(fewest_cities) {}
 	double operator() (const open_path *a, const open_path *b) {
-		return a->est_dist > b->est_dist;
+    switch(fewest_cities) {
+      case 0: return a->est_dist < b->est_dist;
+      case 1: return a->est_cities < b->est_cities;
+      default: return true;
+    }
 	}
 };
 
@@ -93,6 +99,7 @@ class Network
 public:
 	Network() {
 		fewest_cities = false;
+    step_by_step = false;
 	};
 	void add_node(Node *node) {
 		nodes.insert(pair<string, Node *>(node->get_name(), node));
@@ -167,21 +174,27 @@ public:
 		open_path * op;
 		vector<open_path *> temp_vector;
 
-      //erase any path that matches top_name and has a larger est_dist than target
-      vector<open_path *>::iterator iter = temp_vector.begin();
-      while (iter != temp_vector.end()) {
-        open_path * temp_path = *iter;
-        if (temp_path->top_name.compare(target->top_name) == 0 &&
-          temp_path->est_dist > target->est_dist) {
-          iter = temp_vector.erase(iter);
-        }
-        else
-          ++iter;
+    while(!pq.empty()) {
+      op = pq.top();
+      pq.pop();
+      temp_vector.push_back(op);
+    }
+
+    //erase any path that matches top_name and has a larger est_dist than target
+    vector<open_path *>::iterator iter = temp_vector.begin();
+    while (iter != temp_vector.end()) {
+      open_path * temp_path = *iter;
+      if (temp_path->top_name.compare(target->top_name) == 0 &&
+        temp_path->est_dist > target->est_dist) {
+        iter = temp_vector.erase(iter);
       }
+      else
+        ++iter;
+    }
 
       //copy the remaining temp_vector back into priority_queue (pq)
       while (!temp_vector.empty()) {
-        op = temp_vector.front();
+        op = temp_vector.back();
         pq.push(op);
         temp_vector.pop_back();
       }
@@ -193,6 +206,9 @@ public:
     Node * get_current() {return current; }
     void set_fewest_cities() { fewest_cities = true; }
     bool get_fewest_cities() { return fewest_cities; }
+    void set_step_by_step() { step_by_step = true; }
+    bool get_step_by_step() { return step_by_step; }
+    priority_queue<open_path*, vector<open_path *>, compareFunct> get_pq() { return pq; }
     map<string, Node *> get_nodes() { return nodes; }
   private:
     map<string, Node *> nodes;
@@ -200,6 +216,7 @@ public:
     Node *end_node;
     Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
+    bool step_by_step;
   	priority_queue<open_path *, vector<open_path *>, compareFunct> pq;
 };
 
@@ -277,6 +294,25 @@ struct NetworkIO
 		if (selection == 2)
 			network->set_fewest_cities();
 	}
+  // prompts user, then sets network.step T/F
+  static void get_output_type(Network *network) {
+    cout << "Choose output type: (1) Normal or (2) Step-by-step" << endl;
+    int selection = 0;
+    string line;
+    while (selection < 1 || selection > 2) {
+      getline(cin, line);
+      istringstream inSS;
+      inSS.str(line);
+      while(inSS.good()) {
+        inSS >> selection;
+      }
+      if (selection < 1 || selection > 2 ) {
+        cout << "Please enter 1 or 2." << endl;
+      }
+    }
+    if(selection == 2)
+      network->set_step_by_step();
+  }
 	// prompts user to enter cities on one line, stores in vector and returns 
 	static vector<string> get_excluded_nodes() {
 		cout << "Enter any cities you wish to exclude, separated by spaces, or press enter:" << endl;
@@ -367,8 +403,33 @@ struct NetworkIO
       cout << neighbor->get_name() << " ";
     }
     cout << endl << "Open paths: ";
+
     // print top_name of each open path and est_dist / est_cities depending on heuristic
-    
+		open_path * temp_op;
+		vector<open_path *> temp_vector;
+
+    while(!network->get_pq().empty()) {
+      temp_op = network->get_pq().top();
+      network->get_pq().pop();
+      temp_vector.push_back(temp_op);
+    }
+
+    if(network->get_fewest_cities()) {
+      for(open_path * op : temp_vector)
+        cout << op->top_name << "(" << op->est_cities << ")" << endl;
+    } else {
+      for(open_path * op : temp_vector)
+        cout << op->top_name << "(" << op->est_dist << ")" << endl;
+    }
+
+    while (!temp_vector.empty()) {
+      temp_op = temp_vector.back();
+      network->get_pq().push(temp_op);
+      temp_vector.pop_back();
+    }
+
+    cin.sync();
+    cin.get();
   }
 };
 
@@ -377,6 +438,7 @@ int main() {
 	NetworkIO::load_locations(&network);
 	NetworkIO::load_connections(&network);
 	NetworkIO::get_heuristic(&network);
+  NetworkIO::get_output_type(&network);
 	network.exclude_nodes(NetworkIO::get_excluded_nodes());
 	NetworkIO::set_start_node(&network);
 	NetworkIO::set_end_node(&network);
