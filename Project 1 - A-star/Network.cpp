@@ -95,101 +95,115 @@ public:
 
 class Network
 {
-public:
-	Network() {
-		fewest_cities = false;
-    step_by_step = false;
-	};
-	void add_node(Node *node) {
-		nodes.insert(pair<string, Node *>(node->get_name(), node));
-	}
-	Node * get_node(string name) {
-		if (nodes.find(name) != nodes.end())
-			return nodes.at(name);
-		else
-			return nullptr;
-	}
-	void find_path() { // step() until best path found
-		while (step() != 0) {
-
-		}
-	}
-
-	//add all the paths of the starting node
-	void create_starting_path() {
-		for (Node* neighbor : *start_node->get_neighbors()) {
-			open_path *new_path = new open_path();
-			new_path->path.push(start_node);
-			new_path->path.push(neighbor);
-			new_path->update(end_node);
-			pq.push(new_path);
-		}
-	}
-
-	// steps once through system
-	int step() {
-		
-		if (pq.empty()) {	//no solution
-			return 0;
-		}
-		else {
-			open_path * best_path = pq.top();
-			pq.pop();
-
-			//current is the best path's last node; i.e. path ABCD, current = D
-			current = best_path->path.top();
-			// add open_paths to pq for each of that node's neighbors
-			for (Node * neighbor : *current->get_neighbors()) {
-				open_path nbr_path = *best_path;
-				nbr_path.path.push(neighbor);
-				nbr_path.update(end_node);
-				remove_inferior_paths(&nbr_path);
-			}
-			return 1;
-		}
-	}
-	void exclude_nodes(vector<string> excluded_nodes) {
-		for (string name : excluded_nodes) {
-			// check if node exists
-			Node* excluded_node = get_node(name);
-			if (get_node(name) == nullptr)
-				continue;
-			// remove from each node's list of neigbors if they are connected
-			for (pair<string, Node *> element : nodes) {
-				Node *node = element.second;
-				vector<Node *> *neighbors = node->get_neighbors();
-				vector<Node *>::iterator neighbor_location =
-					find(neighbors->begin(), neighbors->end(), excluded_node);
-				if (neighbor_location != neighbors->end()) {
-					*neighbors->erase(neighbor_location);
-				}
-			}
-			// remove from map and delete the Node object
-			nodes.erase(nodes.find(name));
-			delete excluded_node;
-		}
-	}
-	void remove_inferior_paths(open_path* target) {
-		open_path * op;
-		vector<open_path *> temp_vector;
-
-    while(!pq.empty()) {
-      op = pq.top();
-      pq.pop();
-      temp_vector.push_back(op);
+  public:
+    Network() {
+      fewest_cities = false;
+      step_by_step = false;
+    };
+    void add_node(Node *node) {
+      nodes.insert(pair<string, Node *>(node->get_name(), node));
     }
-
-    //erase any path that matches top_name and has a larger est_dist than target
-    vector<open_path *>::iterator iter = temp_vector.begin();
-    while (iter != temp_vector.end()) {
-      open_path * temp_path = *iter;
-      if (temp_path->top_name.compare(target->top_name) == 0 &&
-        temp_path->est_dist > target->est_dist) {
-        iter = temp_vector.erase(iter);
-      }
+    Node * get_node(string name) {
+      if (nodes.find(name) != nodes.end())
+        return nodes.at(name);
       else
-        ++iter;
+        return nullptr;
     }
+    void find_path() { // step() until best path found
+      while (step() != 0) {
+      }
+      if (pq.empty())
+        cout << "Valid path does not exist." << endl;
+      else {
+        cout << "Valid path found!" << endl;
+
+      }
+
+
+    }
+
+    //add all the paths of the starting node
+    void create_starting_path() {
+      for (Node* neighbor : *start_node->get_neighbors()) {
+        open_path *new_path = new open_path();
+        new_path->path.push(start_node);
+        new_path->path.push(neighbor);
+        new_path->update(end_node);
+        pq.push(new_path);
+      }
+    }
+
+    // steps once through system
+    int step() {
+      
+      if (pq.empty()) {	//no solution
+        return 0;
+      }
+      else {
+        open_path * best_path = pq.top();
+        pq.pop();
+
+        //current is the best path's last node; i.e. path ABCD, current = D
+        current = best_path->path.top();
+
+        // add open_paths to pq for each of that node's neighbors
+        for (Node * neighbor : *current->get_neighbors()) {
+          open_path nbr_path = *best_path;
+          nbr_path.path.push(neighbor);
+          nbr_path.update(end_node);
+          pq.push(&nbr_path);
+          remove_inferior_paths(&nbr_path);
+        }
+        //test to see if we've found a valid, shortest path
+        if (pq.top()->top_name.compare(end_node->get_name()) == 0) {
+          return 0;
+        }
+        return 1;
+      }
+    }
+    void exclude_nodes(vector<string> excluded_nodes) {
+      for (string name : excluded_nodes) {
+        // check if node exists
+        Node* excluded_node = get_node(name);
+        if (get_node(name) == nullptr)
+          continue;
+        // remove from each node's list of neigbors if they are connected
+        for (pair<string, Node *> element : nodes) {
+          Node *node = element.second;
+          vector<Node *> *neighbors = node->get_neighbors();
+          vector<Node *>::iterator neighbor_location =
+            find(neighbors->begin(), neighbors->end(), excluded_node);
+          if (neighbor_location != neighbors->end()) {
+            *neighbors->erase(neighbor_location);
+          }
+        }
+        // remove from map and delete the Node object
+        nodes.erase(nodes.find(name));
+        delete excluded_node;
+      }
+    }
+    void remove_inferior_paths(open_path* target) {
+      open_path * op;
+      vector<open_path *> temp_vector;
+
+      //copy all the pq elements to temp_vector, then make pq empty
+      while (!pq.empty()) {
+        op = pq.top();
+        pq.pop();
+        temp_vector.push_back(op);
+      }
+
+      //erase any path that matches top_name and has a larger est_dist than target
+      vector<open_path *>::iterator iter = temp_vector.begin();
+      while (iter != temp_vector.end()) {
+        open_path * temp_path = *iter;
+        if (temp_path->top_name.compare(target->top_name) == 0 &&
+          temp_path->est_dist > target->est_dist) {
+          iter = temp_vector.erase(iter);
+        }
+        else
+          ++iter;
+      }
 
       //copy the remaining temp_vector back into priority_queue (pq)
       while (!temp_vector.empty()) {
