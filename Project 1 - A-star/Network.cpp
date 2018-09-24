@@ -85,14 +85,14 @@ typedef struct open_path
 
 //used to compare all elements of pq; auto orders pq from smallest to largest est_dist, i.e. f(x)
 struct CompareFunct {
-  bool fewest_cities;
-  CompareFunct(bool fewest_cities = false): fewest_cities(fewest_cities) {}
+  bool *fewest_cities;
+  CompareFunct(bool *fewest_cities): fewest_cities(fewest_cities) {};
 	bool operator() (const open_path *a, const open_path *b) const {
-    switch(fewest_cities) {
-      case false: return a->est_dist > b->est_dist;
-      case true: return a->est_cities > b->est_cities;
-    }
-	}
+    if(*fewest_cities)
+      return a->est_cities > b->est_cities;
+    else
+      return a->est_dist > b->est_dist;
+  }
 };
 
 class Network
@@ -263,13 +263,13 @@ class Network
     open_path *current;
     bool fewest_cities;
     bool step_by_step;
-    // CompareFunct cmp(fewest_cities);
+    CompareFunct cmp{&fewest_cities};
     // auto comp = [fewest_cities](open_path *a, open_path *b) -> bool {
     //   if(fewest_cities) return a->est_cities < b->est_cities;
     //   else return a->est_dist < b->est_dist;
     // }
   	// priority_queue<open_path *, vector<open_path *>, decltype(comp)> pq(comp);
-  	priority_queue<open_path *, vector<open_path *>, CompareFunct> pq;
+  	priority_queue<open_path *, vector<open_path *>, CompareFunct> pq{cmp};
 };
 
 struct NetworkIO
@@ -511,19 +511,23 @@ int main() {
 	NetworkIO::set_end_node(&network);
   network.create_starting_path();
   cout << endl;
+  int status;
   if(network.is_step_by_step()) {
     NetworkIO::print_step(&network);
-    int status;
     do {
       status = network.step();
       NetworkIO::print_step(&network);
     } while(status != 0);
-    if(status == -1) {
-      cout << "//=============== NO SOLUTION ===============//" << endl;
-    } else if(status == 0) {
-      cout << "//=========== FINAL SOLUTION PATH ===========//" << endl;
-      // NetworkIO::print_path(&network);
-    }
+  } else {
+    do {
+      status = network.step();
+    } while(status != 0);
+  }
+  if(status == -1) {
+    cout << "//=============== NO SOLUTION ===============//" << endl;
+  } else if(status == 0) {
+    cout << "//=========== FINAL SOLUTION PATH ===========//" << endl;
+    // NetworkIO::print_path(&network);
   }
 	// network.find_path();
 	// NetworkIO::print_path(&network);
