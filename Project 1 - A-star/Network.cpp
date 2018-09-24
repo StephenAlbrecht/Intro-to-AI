@@ -84,12 +84,11 @@ typedef struct open_path
 class compareFunct {
 public:
   int fewest_cities;
-  compareFunct(int fewest_cities = 0): fewest_cities(fewest_cities) {}
+  compareFunct(bool fewest_cities = false): fewest_cities(fewest_cities) {}
 	double operator() (const open_path *a, const open_path *b) {
     switch(fewest_cities) {
-      case 0: return a->est_dist < b->est_dist;
-      case 1: return a->est_cities < b->est_cities;
-      default: return true;
+      case false: return a->est_dist < b->est_dist;
+      case true: return a->est_cities < b->est_cities;
     }
 	}
 };
@@ -210,6 +209,8 @@ public:
     bool get_step_by_step() { return step_by_step; }
     priority_queue<open_path*, vector<open_path *>, compareFunct> get_pq() { return pq; }
     map<string, Node *> get_nodes() { return nodes; }
+    int field;
+    compareFunct cmp(field);
   private:
     map<string, Node *> nodes;
     Node *start_node;
@@ -217,7 +218,7 @@ public:
     Node *current;
     bool fewest_cities; // heuristic. any clearer way to signal alternative is straight_line?
     bool step_by_step;
-  	priority_queue<open_path *, vector<open_path *>, compareFunct> pq;
+  	priority_queue<open_path *, vector<open_path *>, cmp> pq(cmp);
 };
 
 struct NetworkIO
