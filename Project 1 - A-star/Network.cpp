@@ -165,7 +165,7 @@ class Network
               nbr_path->est_cities = current->est_cities;
               nbr_path->est_dist = current->est_dist;
               nbr_path->update(neighbor, end_node);
-              if(!remove_inferior_paths(nbr_path));
+              if(remove_inferior_paths(nbr_path))
                 pq.push(nbr_path);
             }
           }
@@ -177,7 +177,7 @@ class Network
             nbr_path->est_cities = current->est_cities;
             nbr_path->est_dist = current->est_dist;
             nbr_path->update(neighbor, end_node);
-            if(!remove_inferior_paths(nbr_path));
+            if(remove_inferior_paths(nbr_path))
               pq.push(nbr_path);
           }
         }
@@ -310,7 +310,7 @@ struct NetworkIO
 			iss >> num_neighbors;
 
 			map<string, Node *> nodes = network->get_nodes();
-			Node* n = nodes.at(name);
+			// Node* n = nodes.at(name);
 			//n->set_neighbor_count(num_neighbors);
 			vector<Node*> node_neighbors;
 
