@@ -425,12 +425,10 @@ struct NetworkIO
 		stack<Node*> path_copy = network->get_pq().top()->path;
 		stack<Node*> path_result;
 		double total_distance = 0.0;
-		int cities_count = 0;
 
 		if (path_copy.empty()) {
 			cout << "No path found." << endl; 
 		}
-		else cities_count++;
 
 		//copy the stack from path_copy to path_result
 		while (!path_copy.empty()) {
@@ -444,7 +442,6 @@ struct NetworkIO
 		while (!path_result.empty()) {
 			cout << current->get_name() << " to " << path_result.top()->get_name() << ": length = ";
 			if (network->get_fewest_cities()) {
-				cities_count++;
 				cout << "1" << endl;
 			}
 			else {
@@ -456,10 +453,8 @@ struct NetworkIO
 			current = path_result.top();
 			path_result.pop();
 		}
-		if (network->get_fewest_cities())
-			cout << "\nTotal path length = " << cities_count << endl;
-		else
-			cout << "\nTotal path length = " << total_distance << endl; 
+    if (network->get_fewest_cities())
+      cout << "\nTotal path length = " << network->get_pq().top()->est_cities - 1 << endl; 
 	}
 
   // prints current state of the network according to sample output in document
