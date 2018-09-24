@@ -68,8 +68,8 @@ typedef struct open_path
 
 	void update(Node * new_top, Node * end_node) {
 		dist_traveled += path.top()->dist(new_top);
-    path.push(new_top);
-    top_name = path.top()->get_name();
+		path.push(new_top);
+		top_name = path.top()->get_name();
 		est_dist = dist_traveled + path.top()->dist(end_node);	// f(x) value
 		est_cities = path.size() + 1;
 	}
@@ -419,31 +419,48 @@ struct NetworkIO
 		}
 	}
 
-	/*
+	
 	static void print_path(Network *network) {
-	stack<Node*> path_copy = network->get_path();
-	stack<Node*> path_result;
-	if(path_copy.empty())
-	cout << "No path found!" << endl;
-	while (!path_copy.empty()) {
-	path_result.push(path_copy.top());
-	path_copy.pop();
+
+		stack<Node*> path_copy = network->get_pq().top()->path;
+		stack<Node*> path_result;
+		double total_distance = 0.0;
+		int cities_count = 0;
+
+		if (path_copy.empty()) {
+			cout << "No path found." << endl; 
+		}
+		else cities_count++;
+
+		//copy the stack from path_copy to path_result
+		while (!path_copy.empty()) {
+			path_result.push(path_copy.top());
+			path_copy.pop();
+		}
+
+		Node* current = path_result.top();
+		path_result.pop();
+
+		while (!path_result.empty()) {
+			cout << current->get_name() << " to " << path_result.top()->get_name() << ": length = ";
+			if (network->get_fewest_cities()) {
+				cities_count++;
+				cout << "1" << endl;
+			}
+			else {
+				double distance = current->dist(path_result.top());
+				cout << distance << endl;
+				total_distance += distance;
+			}
+
+			current = path_result.top();
+			path_result.pop();
+		}
+		if (network->get_fewest_cities())
+			cout << "\nTotal path length = " << cities_count << endl;
+		else
+			cout << "\nTotal path length = " << total_distance << endl; 
 	}
-	Node* current = path_result.top();
-	Node* neighbor;
-	float distance = 0.0;
-	while (path_result.size() > 1 ) {
-	path_result.pop();
-	neighbor = path_result.top();
-	cout << "From " << current->get_name() << " to " << neighbor->get_name()
-	<< ". Length: " << floor(current->dist(neighbor)) << endl;
-	distance += current->dist(neighbor);
-	current = path_result.top();
-	}
-	network->set_total_distance(distance);
-	cout << "Total Length: " << floor(network->get_total_distance()) << endl;
-	}
-	*/
 
   // prints current state of the network according to sample output in document
   static void print_step(Network *network) {
@@ -506,30 +523,31 @@ int main() {
 	NetworkIO::load_locations(&network);
 	NetworkIO::load_connections(&network);
 	NetworkIO::get_heuristic(&network);
-  NetworkIO::get_output_type(&network);
+	NetworkIO::get_output_type(&network);
 	network.exclude_nodes(NetworkIO::get_excluded_nodes());
 	NetworkIO::set_start_node(&network);
 	NetworkIO::set_end_node(&network);
-  network.create_starting_path();
-  cout << endl;
-  int status;
-  if(network.is_step_by_step()) {
-    NetworkIO::print_step(&network);
-    do {
-      status = network.step();
-      NetworkIO::print_step(&network);
-    } while(status != 0);
-  } else {
-    do {
-      status = network.step();
-    } while(status != 0);
-  }
-  if(status == -1) {
-    cout << "//=============== NO SOLUTION ===============//" << endl;
-  } else if(status == 0) {
-    cout << "//=========== FINAL SOLUTION PATH ===========//" << endl;
-    // NetworkIO::print_path(&network);
-  }
+	network.create_starting_path();
+	cout << endl;
+	 int status;
+	if (network.is_step_by_step()) {
+		NetworkIO::print_step(&network);
+		do {
+			status = network.step();
+			NetworkIO::print_step(&network);
+		} while (status != 0);
+	} else {
+		do {
+		status = network.step();
+		} while (status != 0);
+	}
+	if(status == -1) {
+		cout << "//=============== NO SOLUTION ===============//" << endl;
+	} else if (status == 0) {
+		cout << "//=========== FINAL SOLUTION PATH ===========//" << endl;
+
+		NetworkIO::print_path(&network);
+	}
 	// network.find_path();
 	// NetworkIO::print_path(&network);
 	// cin.sync();
