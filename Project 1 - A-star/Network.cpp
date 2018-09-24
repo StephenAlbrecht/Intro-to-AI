@@ -49,23 +49,6 @@ private:
 typedef struct open_path
 {
 	open_path() {};
-	/*open_path(Node* start_node, Node* end_node) {
-		start = start_node;
-		end = end_node;
-		path.push(start);
-		path.push(end);
-		//update(get_end_node());	//not sure how to pass in the end node; get_end_node() function belongs to Network class
-	}*/
-
-	// double calc_dist_traveled() {
-	// 	Node* n = path.top();
-	// 	for (int i = 0; i < path.size() - 1; i++) {
-	// 		dist_traveled += n->dist(n - 1);
-	// 		n--;
-	// 	}
-	// 	return dist_traveled;
-	// }
-
 	void update(Node * new_top, Node * end_node) {
 		dist_traveled += path.top()->dist(new_top);
 		path.push(new_top);
@@ -75,8 +58,6 @@ typedef struct open_path
 	}
 
 	stack<Node *> path;
-	// Node* start;
-	// Node* end;
 	string top_name;
 	int est_cities;
 	double dist_traveled=0;
@@ -111,19 +92,6 @@ class Network
       else
         return nullptr;
     }
-    void find_path() { // step() until best path found
-      while (step() != 0) {
-      }
-      if (pq.empty())
-        cout << "Valid path does not exist." << endl;
-      else {
-        cout << "Valid path found!" << endl;
-
-      }
-
-
-    }
-
     //add all the paths of the starting node
     void create_starting_path() {
       current = new open_path();
@@ -440,21 +408,28 @@ struct NetworkIO
 		path_result.pop();
 
 		while (!path_result.empty()) {
-			cout << current->get_name() << " to " << path_result.top()->get_name() << ": length = ";
-			if (network->get_fewest_cities()) {
-				cout << "1" << endl;
-			}
+      cout << current->get_name() << " to " << path_result.top()->get_name() << ": length = ";
+      if (network->get_fewest_cities()) {
+        if (!first_visit_done) {
+          cout << "2" << endl;
+          first_visit_done = true;
+        }
+        else cout << "1" << endl;
+      }
 			else {
+        cout << fixed << setprecision(2);
 				double distance = current->dist(path_result.top());
 				cout << distance << endl;
 				total_distance += distance;
 			}
-
 			current = path_result.top();
 			path_result.pop();
 		}
+    cout << "\nTotal path length: ";
     if (network->get_fewest_cities())
-      cout << "\nTotal path length = " << network->get_pq().top()->est_cities - 1 << endl; 
+      cout << network->get_pq().top()->est_cities - 1 << endl; 
+    else
+      cout << network->get_pq().top()->dist_traveled << endl;
 	}
 
   // prints current state of the network according to sample output in document
@@ -502,11 +477,6 @@ struct NetworkIO
         cout << op->top_name << "(" << op->est_dist << ") ";
     }
 
-    // while (!temp_vector.empty()) {
-    //   temp_op = temp_vector.back();
-    //   pq.push(temp_op);
-    //   temp_vector.pop_back();
-    // }
     cout << endl << "----------------------------------------------------" << endl;
     cin.sync();
     cin.get();
@@ -543,8 +513,7 @@ int main() {
 
 		NetworkIO::print_path(&network);
 	}
-	// network.find_path();
-	// NetworkIO::print_path(&network);
-	// cin.sync();
-	// cin.get();
+
+	cin.sync();
+	cin.get();
 }
