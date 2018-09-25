@@ -99,6 +99,11 @@ class Network
     int step() {
       if (pq.empty())	//no solution
         return -1;
+      //test to see if we've found a valid, shortest path
+      
+      if(current->top_name.compare(end_node->get_name()) == 0) {
+        return 0;
+      }
       
       open_path * best_path = pq.top();
       pq.pop();
@@ -126,10 +131,6 @@ class Network
           if(remove_inferior_paths(nbr_path))
             pq.push(nbr_path);
         }
-      }
-      //test to see if we've found a valid, shortest path
-      if (pq.top()->top_name.compare(end_node->get_name()) == 0) {
-        return 0;
       }
       return 1;
     }
@@ -360,7 +361,7 @@ struct NetworkIO
 	
 	static void print_path(Network *network) {
 
-		stack<Node*> path_copy = network->get_pq().top()->path;
+		stack<Node*> path_copy = network->get_current()->path;
 		stack<Node*> path_result;
 		bool first_visit_done = false;
 
@@ -405,6 +406,7 @@ struct NetworkIO
   static void print_step(Network *network) {
     // print network->current->getname
     open_path *current = network->get_current();
+    cout << "----------------------------------------------------" << endl;
     cout << "Current node: " << current->top_name << endl;
     // print current's neighbors
     cout << "Current node's neighbors: ";
@@ -445,8 +447,7 @@ struct NetworkIO
       for(open_path * op : temp_vector)
         cout << op->top_name << "(" << op->est_dist << ") ";
     }
-
-    cout << endl << "----------------------------------------------------" << endl;
+    cout << endl;
     cin.sync();
     cin.get();
   }
@@ -465,10 +466,9 @@ int main() {
 	cout << endl;
 	int status;
 	if (network.is_step_by_step()) {
-		NetworkIO::print_step(&network);
 		do {
-			status = network.step();
 			NetworkIO::print_step(&network);
+			status = network.step();
 		} while (status != 0);
 	} else {
 		do {
