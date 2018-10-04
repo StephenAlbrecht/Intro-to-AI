@@ -23,12 +23,12 @@ hypothesize(bike). /* no conclusion */
 pickup_truck :- cool_car, verify(good_storage_space).
 sports_car :- cool_car.
 minivan :- utility, verify(room_for_more_than_5_people).
-suv :- utility, verify(good_gas_mileage).
+suv :- utility.
 sedan :- verify(good_storage_space).
 compact :- verify(good_gas_mileage).
 
 /* classification rules */
-utility :- verify(good_storage_space).
+utility :- verify(good_storage_space), verify(roof_racks).
 cool_car :- verify(to_be_a_mean_lookin_machine), !.
 cool_car :- verify(at_most_2_seats).
 
